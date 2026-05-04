@@ -1,12 +1,12 @@
 import Foundation
 import Combine
-import ServiceManagement // Necesario para el inicio automático
+import ServiceManagement // Required for launch at login
 
 class SpotifyMonitor: ObservableObject {
     @Published var isMuted: Bool = false
     @Published var isActive: Bool = true
     
-    // Nuevas variables para nuestras dos funciones
+    // New variables for our two features
     @Published var enforcePrivateSession: Bool = false
     @Published var launchAtLogin: Bool = false
     
@@ -14,7 +14,7 @@ class SpotifyMonitor: ObservableObject {
     private var originalVolume: Int = 100
     
     init() {
-        // Comprobamos si la app ya estaba configurada para iniciar con el Mac
+        // Check if the app was already configured to launch at startup
         self.launchAtLogin = SMAppService.mainApp.status == .enabled
         startMonitoring()
     }
@@ -24,7 +24,7 @@ class SpotifyMonitor: ObservableObject {
         if isActive { startMonitoring() } else { stopMonitoring() }
     }
     
-    // Función para activar o desactivar el inicio automático
+    // Function to enable or disable launch at login
     func toggleLaunchAtLogin(enabled: Bool) {
         do {
             if enabled {
@@ -33,7 +33,7 @@ class SpotifyMonitor: ObservableObject {
                 try SMAppService.mainApp.unregister()
             }
         } catch {
-            print("Error al cambiar el inicio automático: \(error.localizedDescription)")
+            print("Error changing launch at login status: \(error.localizedDescription)")
         }
     }
     
@@ -43,7 +43,7 @@ class SpotifyMonitor: ObservableObject {
                 if isActive {
                     await checkSpotify()
                     
-                    // Si el usuario quiere sesión privada, lo verificamos en cada ciclo
+                    // If the user wants a private session, check it in each cycle
                     if enforcePrivateSession {
                         await ensurePrivateSession()
                     }
@@ -79,19 +79,20 @@ class SpotifyMonitor: ObservableObject {
         }
     }
     
-    // Función que interactúa con el menú de Spotify para forzar la sesión privada
+    // Function that interacts with the Spotify menu to enforce a private session
     private func ensurePrivateSession() async {
-        // NOTA: Si tu Spotify está en español, cambia "Private Session" por "Sesión privada"
+        // NOTE: If the user's Spotify is in a language other than English,
+        // "Private Session" must match the exact localized menu item string.
         let script = """
         tell application "System Events"
             if exists (process "Spotify") then
                 tell process "Spotify"
-                    -- Accede al menú de la aplicación Spotify (el segundo elemento de la barra de menú)
+                    -- Access the Spotify application menu (the second item in the menu bar)
                     set theMenu to menu 1 of menu bar item 2 of menu bar 1
                     set theMenuItem to menu item "Private Session" of theMenu
                     
                     if exists theMenuItem then
-                        -- Comprobamos si tiene una marca de verificación (checkmark)
+                        -- Check if it has a checkmark
                         set isChecked to (value of attribute "AXMenuItemMarkChar" of theMenuItem) is not missing value
                         if not isChecked then
                             click theMenuItem

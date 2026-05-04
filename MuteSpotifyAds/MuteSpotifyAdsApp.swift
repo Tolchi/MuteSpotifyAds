@@ -9,24 +9,24 @@ struct MuteSpotifyAdsApp: App {
             "MuteSpotifyAds",
             systemImage: spotifyMonitor.isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill"
         ) {
-            Button(spotifyMonitor.isActive ? "Pausar Monitoreo" : "Reanudar Monitoreo") {
+            Button(spotifyMonitor.isActive ? String(localized: "Pause Monitoring") : String(localized: "Resume Monitoring")) {
                 spotifyMonitor.toggleMonitoring()
             }
             
             Divider()
             
-            // Interruptor para la sesión privada infinita
-            Toggle("Sesión Privada Infinita", isOn: $spotifyMonitor.enforcePrivateSession)
+            // Toggle for the infinite private session
+            Toggle("Enforce Private Session", isOn: $spotifyMonitor.enforcePrivateSession)
             
-            // Interruptor para el inicio automático con el Mac
-            Toggle("Iniciar al encender el Mac", isOn: $spotifyMonitor.launchAtLogin)
-                .onChange(of: spotifyMonitor.launchAtLogin) { newValue in
+            // Toggle for launching the app at startup
+            Toggle("Launch at Login", isOn: $spotifyMonitor.launchAtLogin)
+                .onChange(of: spotifyMonitor.launchAtLogin) { oldValue, newValue in
                     spotifyMonitor.toggleLaunchAtLogin(enabled: newValue)
                 }
             
             Divider()
             
-            Button("Salir") {
+            Button("Quit") {
                 NSApplication.shared.terminate(nil)
             }
         }
