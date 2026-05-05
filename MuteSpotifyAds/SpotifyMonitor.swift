@@ -1,6 +1,7 @@
 import Foundation
 import Combine
-import ServiceManagement // Required for launch at login
+import ServiceManagement
+import AppKit
 
 class SpotifyMonitor: ObservableObject {
     @Published var isMuted: Bool = false
@@ -41,11 +42,20 @@ class SpotifyMonitor: ObservableObject {
         timerTask = Task {
             while !Task.isCancelled {
                 if isActive {
-                    await checkSpotify()
-                    
-                    // If the user wants a private session, check it in each cycle
-                    if enforcePrivateSession {
-                        await ensurePrivateSession()
+                    // Only check and enforce if Spotify is actually running
+                    if isSpotifyRunning() {
+                        await checkSpotify()
+                        
+                        // If the user wants a private session, check it in each cycle
+                        if enforcePrivateSession {
+                            await ensurePrivateSession()
+                        }
+                    } else {
+                        // If Spotify is closed, ensure we reset the muted state
+                        // so it doesn't get stuck if they reopen it later.
+                        if isMuted {
+                            DispatchQueue.main.async { self.isMuted = false }
+                        }
                     }
                 }
                 try? await Task.sleep(nanoseconds: 1_000_000_000)
@@ -113,4 +123,12 @@ class SpotifyMonitor: ObservableObject {
         }
         return nil
     }
+    
+    // Check if Spotify is currently running to prevent unwanted launches
+    private func isSpotifyRunning() -> Bool {
+        let runningApps = NSWorkspace.shared.runningApplications
+        // We use the Bundle Identifier to accurately detect the app
+        return runningApps.contains { $0.bundleIdentifier == "com.spotify.client" }
+    }
 }
+
