@@ -3,6 +3,13 @@ import SwiftUI
 @main
 struct MuteSpotifyAdsApp: App {
     @StateObject private var spotifyMonitor = SpotifyMonitor()
+    
+    private var notificationManager: SpotifyNotificationManager
+        
+    init() {
+       // Initialize the native macOS Spotify notification subsystem
+       self.notificationManager = SpotifyNotificationManager()
+    }
 
     var body: some Scene {
         MenuBarExtra(
